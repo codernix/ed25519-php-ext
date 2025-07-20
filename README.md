@@ -5,6 +5,7 @@ A high-performance PHP extension for the Ed25519 digital signature system, built
 
 This extension provides fast and secure functions for key generation, signing messages, and verifying signatures, including support for batch verification.
 
+For more details and articles, visit the **[official project page](https://codernix.com/open-source/cryptography/ed25519-php-extension/)**.
 ## Features
 
 * **High Speed**: Leverages an optimized `amd64-64-24k` assembly implementation for maximum performance on x86-64 servers.
