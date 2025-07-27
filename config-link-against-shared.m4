@@ -20,25 +20,14 @@ if test "$PHP_ED25519" != "no"; then
     dnl Add the include directory
     PHP_ADD_INCLUDE([$ED25519_DIR/include])
 
-    dnl IMPORTANT: For self-contained build, we need to link the full static library
-    dnl This includes all symbols from the static library into the PHP extension
-
-    dnl First, add the library search path
-    PHP_ADD_LIBPATH($ED25519_DIR/lib, ED25519_SHARED_LIBADD)
-
-    dnl Then add the full static library with all dependencies
-    dnl Using EXTRA_LDFLAGS to ensure the whole archive is included
-    EXTRA_LDFLAGS="$EXTRA_LDFLAGS -Wl,--whole-archive $ED25519_DIR/lib/libcrypto_sign_ed25519_full.a -Wl,--no-whole-archive"
-    PHP_SUBST(EXTRA_LDFLAGS)
-
-    dnl Also ensure we have the proper link flags
-    ED25519_SHARED_LIBADD="$ED25519_SHARED_LIBADD -Wl,--whole-archive $ED25519_DIR/lib/libcrypto_sign_ed25519_full.a -Wl,--no-whole-archive"
+    dnl Add the main Ed25519 library (using the static library for bundling)
+    PHP_ADD_LIBRARY_WITH_PATH(crypto_sign_ed25519, $ED25519_DIR/lib, ED25519_SHARED_LIBADD)
     PHP_SUBST(ED25519_SHARED_LIBADD)
 
     dnl Debug output
     AC_MSG_NOTICE([Using ED25519_DIR = $ED25519_DIR])
     AC_MSG_NOTICE([Expecting header files in: $ED25519_DIR/include])
-    AC_MSG_NOTICE([Statically linking: $ED25519_DIR/lib/libcrypto_sign_ed25519_full.a])
+    AC_MSG_NOTICE([Expecting library file: $ED25519_DIR/lib/libcrypto_sign_ed25519.a])
 
     dnl Check that the Ed25519 library contains the required symbol
     AC_MSG_CHECKING([for crypto_sign_ed25519_amd64_64_24k_keypair in libcrypto_sign_ed25519])
@@ -49,7 +38,7 @@ if test "$PHP_ED25519" != "no"; then
 
     dnl Set up the test environment
     CPPFLAGS="$CPPFLAGS -I$ED25519_DIR/include"
-    LIBS="-L$ED25519_DIR/lib -l:libcrypto_sign_ed25519_full.a $LIBS"
+    LIBS="-L$ED25519_DIR/lib -lcrypto_sign_ed25519 $LIBS"
 
     dnl Try to compile and link a test program
     AC_LINK_IFELSE(
@@ -61,12 +50,12 @@ if test "$PHP_ED25519" != "no"; then
         [AC_MSG_RESULT([yes])],
         [AC_MSG_ERROR([Cannot find libcrypto_sign_ed25519.a with symbol crypto_sign_ed25519_amd64_64_24k_keypair.
 Please check:
-  1. That libcrypto_sign_ed25519_full.a exists in $ED25519_DIR/lib
+  1. That libcrypto_sign_ed25519.a exists in $ED25519_DIR/lib
   2. That the header "crypto_sign.h" is in $ED25519_DIR/include
   3. That the library was built with -fPIC
 See config.log for compilation details.])]
     )
-    
+
     dnl Restore flags
     CPPFLAGS="$SAVE_CPPFLAGS"
     LIBS="$SAVE_LIBS"
